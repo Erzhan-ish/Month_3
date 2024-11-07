@@ -1,26 +1,20 @@
 import asyncio
-from aiogram import Bot, Dispatcher, types
-from aiogram.filters import Command
-from dotenv import dotenv_values
+import logging
 
-token = dotenv_values(".env")["BOT_TOKEN"]
-bot = Bot(token=token)
-dp = Dispatcher()
+from bot_config import bot, dp
+from handlers.other_messages import other_messages_router
+from handlers.picture import picture_router
+from handlers.start import start_router
 
-@dp.message(Command("start"))
-async def start_handler(message: types.Message):
-    name = message.from_user.first_name
-    msg = f"Привет, {name}"
-    await message.answer(msg)
 
-@dp.message()
-async def echo_handler(message: types.Message):
-    # обработчик всех сообщений
-    await  message.answer(message.text)
-
+# запуск бота
 async def main():
-    # запуск бота
+    dp.include_router(start_router)
+    dp.include_router(picture_router)
+    dp.include_router(other_messages_router)
     await dp.start_polling(bot)
 
+
 if __name__ == '__main__':
+    logging.basicConfig(level=logging.INFO) # логирование
     asyncio.run(main())
