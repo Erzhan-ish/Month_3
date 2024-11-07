@@ -1,4 +1,4 @@
-from aiogram import Router, types
+from aiogram import Router, F, types
 from aiogram.filters import Command
 
 start_router = Router()
@@ -20,6 +20,12 @@ async def start_handler(message: types.Message):
                     text="Наш сайт",
                     url="https://geeks.kg"
                 )
+            ],
+            [
+                types.InlineKeyboardButton(
+                    text="О нас",
+                    callback_data="about_us"
+                )
             ]
         ]
     )
@@ -27,4 +33,9 @@ async def start_handler(message: types.Message):
     # await bot.send_message(
     #     chat_id=message.chat.id,
     #     text=msg,
-    # )
+    #
+
+#@start_router.callback_query(lambda cb: cb.data == "about")
+@start_router.callback_query(F.data == "about_us")
+async def about_us(callback: types.CallbackQuery):
+    await callback.message.answer("О нас")

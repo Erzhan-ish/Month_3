@@ -11,3 +11,7 @@ async def picture_handler(message: types.Message):
         photo=photo,
         caption="Собачка"
     )
+    await message.reply_photo(
+        photo=photo,
+        caption="Собачка"
+    )

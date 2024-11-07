@@ -2,6 +2,7 @@ import asyncio
 import logging
 
 from bot_config import bot, dp
+from handlers.opros_dialog import opros_router
 from handlers.other_messages import other_messages_router
 from handlers.picture import picture_router
 from handlers.start import start_router
@@ -9,6 +10,7 @@ from handlers.start import start_router
 
 # запуск бота
 async def main():
+    dp.include_router(opros_router)
     dp.include_router(start_router)
     dp.include_router(picture_router)
     dp.include_router(other_messages_router)
