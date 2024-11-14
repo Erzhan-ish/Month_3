@@ -3,6 +3,8 @@ from aiogram.filters import Command
 from aiogram.fsm.state import State, StatesGroup
 from aiogram.fsm.context import FSMContext
 
+from bot_config import database
+
 opros_router = Router()
 
 # fsm = finite state machine - конечный автомат
@@ -11,6 +13,12 @@ class Opros(StatesGroup):
     age = State()
     gender = State()
     genre = State()
+
+@opros_router.message(Command("stop"))
+@opros_router.message(F.text == "стоп")
+async def stop_opros(message: types.Message, state: FSMContext):
+    await state.clear()
+    await message.answer("Опрос остановлен")
 
 @opros_router.message(Command("opros"))
 async def start_opros(message: types.Message, state: FSMContext):
@@ -28,7 +36,7 @@ async def process_name(message: types.Message, state: FSMContext):
 @opros_router.message(Opros.age)
 async def process_age(message: types.Message, state: FSMContext):
     age = message.text
-    if age.isdigit():
+    if not age.isdigit():
         await message.answer("Вводите только цифры")
         return
     age = int(age)
@@ -67,5 +75,13 @@ async def process_genre(message: types.Message, state: FSMContext):
     await state.update_data(genre=message.text)
     await message.answer("Спасибо за пройденый опрос")
     data = await state.get_data()
-    print(data)
+    print(data) # {"name"}: "igor:, {"age"}: 32, {"gender"}: "мужской", {"genre"}: "horror"
+
+    database.execute(
+        query="""
+        INSERT INTO survey_results (name, age, gender, genre)
+        VALUES (?, ?, ?, ?)
+        """,
+        params=(data["name"], data["age"], data["gender"], data["genre"])
+    )
     await state.clear()
