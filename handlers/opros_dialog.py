@@ -27,16 +27,39 @@ async def process_name(message: types.Message, state: FSMContext):
 
 @opros_router.message(Opros.age)
 async def process_age(message: types.Message, state: FSMContext):
+    age = message.text
+    if age.isdigit():
+        await message.answer("Вводите только цифры")
+        return
+    age = int(age)
+    if age < 12 or age > 90:
+        await message.answer("Вводите возраст от 12 до 90")
+        return
+
     await state.update_data(age=message.text)
     await state.set_state(Opros.gender)
-    await message.answer("Напишите ваш пол")
+    kb = types.ReplyKeyboardMarkup(
+        keyboard=[
+            [
+                types.KeyboardButton(text="Мужской"),
+                types.KeyboardButton(text="Женский")
+            ]
+        ]
+    )
+    await message.answer("Напишите ваш пол", reply_markup=kb)
 
+# @opros_router.message(Opros.gender, F.text == "Мужской")
+# async def process_gender(message: types.Message, state: FSMContext):
+#     await state.update_data(gender=message.text)
+#     await state.set_state(Opros.genre)
+#     await message.answer("Какой у вас любимый литературный жанр?")
 
-@opros_router.message(Opros.gender)
+@opros_router.message(Opros.gender, F.text.in_(["Мужской", "Женский"]))
 async def process_gender(message: types.Message, state: FSMContext):
+    kb = types.ReplyKeyboardRemove()
     await state.update_data(gender=message.text)
     await state.set_state(Opros.genre)
-    await message.answer("Какой у вас любимый литературный жанр?")
+    await message.answer("Какой у вас любимый литературный жанр?", reply_markup=kb)
 
 
 @opros_router.message(Opros.genre)
