@@ -1,6 +1,6 @@
 from aiogram import Router, F, types
 from aiogram.filters import Command
-from aiogram.fsm.state import State, StatesGroup
+from aiogram.fsm.state import State, StatesGroup, default_state
 from aiogram.fsm.context import FSMContext
 
 from bot_config import database
@@ -20,7 +20,7 @@ async def stop_opros(message: types.Message, state: FSMContext):
     await state.clear()
     await message.answer("Опрос остановлен")
 
-@opros_router.message(Command("opros"))
+@opros_router.message(Command("opros"), default_state)
 async def start_opros(message: types.Message, state: FSMContext):
     await state.set_state(Opros.name)
     await message.answer("Как вас зовут?")
@@ -84,4 +84,11 @@ async def process_genre(message: types.Message, state: FSMContext):
         """,
         params=(data["name"], data["age"], data["gender"], data["genre"])
     )
+
+    # так делать не надо
+    # database.execute(
+    #     query=f"INSERT INTO survey_results (name , age , gender, genre) VALUES ({data['name']}, ?, ?, ?)",
+    #     params=tuple()
+    # )
+
     await state.clear()

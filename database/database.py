@@ -17,12 +17,35 @@ class Database:
                     )
                 """
             )
+            conn.execute(
+                """
+                    CREATE TABLE IF NOT EXISTS books(
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        name text NOT NULL,
+                        author text NOT NULL,
+                        price INTEGER NOT NULL,
+                        genre TEXT NOT NULL
+                    )
+                """
+                )
+
             conn.commit()
 
     def execute(self, query: str, params: tuple):
         with sqlite3.connect(self.path) as conn:
             conn.execute(query, params)
             conn.commit()
+
+    def fetch(self, query: str, params: tuple = None):
+        with sqlite3.connect(self.path) as conn:
+            if not params:
+                params = tuple()
+            result = conn.execute(query, params)
+            result.row_factory = sqlite3.Row
+            data = result.fetchall()
+            return [dict(r) for r in data]
+
+
 
 # conn = sqlite3.connect("database.sqlite")
 # cursor = conn.cursor()
