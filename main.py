@@ -3,12 +3,9 @@ import logging
 
 from bot_config import bot, dp, database
 
-from handlers.admin_book import admin_book_router
-from handlers.opros_dialog import opros_router
-from handlers.other_messages import other_messages_router
-from handlers.picture import picture_router
-from handlers.shop import shop_router
-from handlers.start import start_router
+from handlers import private_router
+from handlers.group import group_router
+
 
 async def on_startup(bot):
     database.create_tables()
@@ -16,15 +13,8 @@ async def on_startup(bot):
 
 # запуск бота
 async def main():
-    dp.include_router(opros_router)
-    dp.include_router(start_router)
-    dp.include_router(picture_router)
-    dp.include_router(admin_book_router)
-    dp.include_router(shop_router)
-
-    dp.include_router(other_messages_router)
-
-    dp.startup.register(on_startup)
+    dp.include_router(private_router)
+    dp.include_router(group_router)
     await dp.start_polling(bot)
 
 

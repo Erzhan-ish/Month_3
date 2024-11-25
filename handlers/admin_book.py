@@ -9,12 +9,35 @@ admin_book_router = Router()
 admin_book_router.message.filter(
     F.from_user.id == 5747517813
 )
+admin_book_router.callback_query.filter(
+    F.from_user.id == 5747517813
+)
 
 class Book(StatesGroup):
     name = State()
     author = State()
     price = State()
     genre = State()
+
+class Genre(StatesGroup):
+    name = State()
+
+@admin_book_router.message(Command("newgenre"))
+async def create_new_genre(message: types.Message, state: FSMContext):
+    await state.set_state(Genre.name)
+    await message.answer("Задайте название жанра: ")
+
+@admin_book_router.message(Genre.name)
+async def process_name(message: types.Message, state: FSMContext):
+    genre = message.text
+    database.execute(
+        query="""
+            INSERT INTO genres(name) VALUES (?)
+        """,
+        params=(genre, )
+    )
+    await message.answer("Жанр добавлен в БД")
+    await state.clear()
 
 
 @admin_book_router.message(Command("newbook"), default_state)
@@ -37,12 +60,31 @@ async def process_author(message: types.Message, state: FSMContext):
 @admin_book_router.message(Book.price)
 async def process_price(message: types.Message, state: FSMContext):
     await state.update_data(price=message.text)
+    all_genres = database.fetch("SELECT * FROM genres")
+    if not all_genres:
+        await message.answer("Нет ни одного жанра")
+        await state.clear()
+        return
+    kb = types.ReplyKeyboardMarkup(
+        keyboard=[
+            [types.KeyboardButton(text=genre["name"]) for genre in all_genres]
+        ]
+    )
     await state.set_state(Book.genre)
-    await message.answer("Задайте жанр книги: ")
+    await message.answer("Задайте жанр книги: ", reply_markup=kb)
 
 @admin_book_router.message(Book.genre)
 async def process_genre(message: types.Message, state: FSMContext):
-    await state.update_data(genre=message.text)
+    print(message.text)
+    genre_id = database.fetch(
+        query="SELECT id FROM genres WHERE name = ?", # [{'id' : 3}] []
+        params=(message.text,)
+    )
+    if not genre_id:
+        await message.answer("Вы напечатали несуществующий жанр в БД")
+        return
+
+    await state.update_data(genre=genre_id[0]["id"])
     data = await state.get_data()
     database.execute(
         query="""
